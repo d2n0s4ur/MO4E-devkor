@@ -2,6 +2,9 @@ from datetime import timedelta, datetime
 import pandas as pd
 from sklearn.linear_model import LinearRegression
 import pickle
+import boto3
+from airflow.models import Variable
+import os
 
 from pykrx import stock
 
@@ -70,6 +73,24 @@ def model_train(**context):
     # 모델 저장
     today = get_today()
     pickle.dump(lr, open(f'./{today}_model.pkl', 'wb'))
+
+    # create s3 client
+    Bucket = Variable.get("S3_BUCKET_NAME")
+    ClientAccessKey = Variable.get("S3_ACCESS_KEY")
+    ClientSecret = Variable.get("S3_SECRET")
+    ConnectionUrl = Variable.get("S3_ENDPOINT")
+    PublicUrl = Variable.get("S3_PUBLIC_URL")
+
+    s3 = boto3.client(
+        service_name ="s3",
+        endpoint_url = ConnectionUrl,
+        aws_access_key_id = ClientAccessKey,
+        aws_secret_access_key = ClientSecret,
+        region_name="apac", # Must be one of: wnam, enam, weur, eeur, apac, auto
+    )
+
+    # upload model to s3
+    s3.upload_file(f'./{today}_model.pkl', Bucket, f'{today}_model.pkl')
 
     predict_target = '005930' #삼성전자
 
