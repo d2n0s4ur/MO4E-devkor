@@ -2,3 +2,7 @@ python==3.10
 fastapi==0.104.1
 uvicorn==0.24.0.post1
 uuid
+boto3
+dotenv
+pykrx
+scikit-learn
